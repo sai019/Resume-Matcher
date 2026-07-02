@@ -213,6 +213,59 @@ export default function ResumeViewerPage() {
     setShowDownloadSuccessDialog(false);
   };
 
+  // Delete-related dialogs are rendered in every return branch (including the
+  // loading/error early returns) so the "Delete & Start Over" recovery action
+  // works when a resume fails processing — otherwise the confirm dialog would
+  // never mount and the delete request would never be sent.
+  const deleteDialogs = (
+    <>
+      <ConfirmDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        title={
+          isMasterResume ? t('confirmations.deleteMasterResumeTitle') : t('dashboard.deleteResume')
+        }
+        description={
+          isMasterResume
+            ? t('confirmations.deleteMasterResumeDescription')
+            : t('confirmations.deleteResumeFromSystemDescription')
+        }
+        confirmLabel={t('confirmations.deleteResumeConfirmLabel')}
+        cancelLabel={t('confirmations.keepResumeCancelLabel')}
+        onConfirm={handleDeleteResume}
+        variant="danger"
+      />
+
+      <ConfirmDialog
+        open={showDeleteSuccessDialog}
+        onOpenChange={setShowDeleteSuccessDialog}
+        title={t('resumeViewer.deletedTitle')}
+        description={
+          isMasterResume
+            ? t('resumeViewer.deletedDescriptionMaster')
+            : t('resumeViewer.deletedDescriptionRegular')
+        }
+        confirmLabel={t('resumeViewer.returnToDashboard')}
+        onConfirm={handleDeleteSuccessConfirm}
+        variant="success"
+        showCancelButton={false}
+      />
+
+      {deleteError && (
+        <ConfirmDialog
+          open={!!deleteError}
+          onOpenChange={() => setDeleteError(null)}
+          title={t('resumeViewer.deleteFailedTitle')}
+          description={deleteError}
+          confirmLabel={t('common.ok')}
+          onConfirm={() => setDeleteError(null)}
+          variant="danger"
+          showCancelButton={false}
+        />
+      )}
+    </>
+  );
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background">
@@ -229,56 +282,59 @@ export default function ResumeViewerPage() {
     const isFailed = processingStatus === 'failed';
 
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
-        <div
-          className={`border p-6 text-center max-w-md shadow-sw-default ${
-            isProcessing
-              ? 'bg-blue-50 border-blue-200'
-              : isFailed
-                ? 'bg-orange-50 border-orange-200'
-                : 'bg-red-50 border-red-200'
-          }`}
-        >
-          <div className="flex justify-center mb-4">
-            {isProcessing ? (
-              <Loader2 className="w-8 h-8 animate-spin text-blue-700" />
-            ) : isFailed ? (
-              <AlertCircle className="w-8 h-8 text-orange-600" />
-            ) : (
-              <AlertCircle className="w-8 h-8 text-red-600" />
-            )}
-          </div>
-          <p
-            className={`font-bold mb-4 ${
-              isProcessing ? 'text-blue-700' : isFailed ? 'text-orange-700' : 'text-red-700'
+      <>
+        <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
+          <div
+            className={`border p-6 text-center max-w-md shadow-sw-default ${
+              isProcessing
+                ? 'bg-blue-50 border-blue-200'
+                : isFailed
+                  ? 'bg-orange-50 border-orange-200'
+                  : 'bg-red-50 border-red-200'
             }`}
           >
-            {error || t('resumeViewer.resumeNotFound')}
-          </p>
-          <div className="flex flex-col gap-2">
-            {isFailed && (
-              <>
-                <Button onClick={handleRetryProcessing} disabled={isRetrying}>
-                  {isRetrying ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      {t('common.processing')}
-                    </>
-                  ) : (
-                    t('resumeViewer.retryProcessing')
-                  )}
-                </Button>
-                <Button variant="destructive" onClick={() => setShowDeleteDialog(true)}>
-                  {t('resumeViewer.deleteAndStartOver')}
-                </Button>
-              </>
-            )}
-            <Button variant="outline" onClick={() => router.push('/dashboard')}>
-              {t('resumeViewer.returnToDashboard')}
-            </Button>
+            <div className="flex justify-center mb-4">
+              {isProcessing ? (
+                <Loader2 className="w-8 h-8 animate-spin text-blue-700" />
+              ) : isFailed ? (
+                <AlertCircle className="w-8 h-8 text-orange-600" />
+              ) : (
+                <AlertCircle className="w-8 h-8 text-red-600" />
+              )}
+            </div>
+            <p
+              className={`font-bold mb-4 ${
+                isProcessing ? 'text-blue-700' : isFailed ? 'text-orange-700' : 'text-red-700'
+              }`}
+            >
+              {error || t('resumeViewer.resumeNotFound')}
+            </p>
+            <div className="flex flex-col gap-2">
+              {isFailed && (
+                <>
+                  <Button onClick={handleRetryProcessing} disabled={isRetrying}>
+                    {isRetrying ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        {t('common.processing')}
+                      </>
+                    ) : (
+                      t('resumeViewer.retryProcessing')
+                    )}
+                  </Button>
+                  <Button variant="destructive" onClick={() => setShowDeleteDialog(true)}>
+                    {t('resumeViewer.deleteAndStartOver')}
+                  </Button>
+                </>
+              )}
+              <Button variant="outline" onClick={() => router.push('/dashboard')}>
+                {t('resumeViewer.returnToDashboard')}
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
+        {deleteDialogs}
+      </>
     );
   }
 
@@ -382,37 +438,7 @@ export default function ResumeViewerPage() {
         </div>
       </div>
 
-      <ConfirmDialog
-        open={showDeleteDialog}
-        onOpenChange={setShowDeleteDialog}
-        title={
-          isMasterResume ? t('confirmations.deleteMasterResumeTitle') : t('dashboard.deleteResume')
-        }
-        description={
-          isMasterResume
-            ? t('confirmations.deleteMasterResumeDescription')
-            : t('confirmations.deleteResumeFromSystemDescription')
-        }
-        confirmLabel={t('confirmations.deleteResumeConfirmLabel')}
-        cancelLabel={t('confirmations.keepResumeCancelLabel')}
-        onConfirm={handleDeleteResume}
-        variant="danger"
-      />
-
-      <ConfirmDialog
-        open={showDeleteSuccessDialog}
-        onOpenChange={setShowDeleteSuccessDialog}
-        title={t('resumeViewer.deletedTitle')}
-        description={
-          isMasterResume
-            ? t('resumeViewer.deletedDescriptionMaster')
-            : t('resumeViewer.deletedDescriptionRegular')
-        }
-        confirmLabel={t('resumeViewer.returnToDashboard')}
-        onConfirm={handleDeleteSuccessConfirm}
-        variant="success"
-        showCancelButton={false}
-      />
+      {deleteDialogs}
 
       <ConfirmDialog
         open={showDownloadSuccessDialog}
@@ -424,19 +450,6 @@ export default function ResumeViewerPage() {
         variant="success"
         showCancelButton={false}
       />
-
-      {deleteError && (
-        <ConfirmDialog
-          open={!!deleteError}
-          onOpenChange={() => setDeleteError(null)}
-          title={t('resumeViewer.deleteFailedTitle')}
-          description={deleteError}
-          confirmLabel={t('common.ok')}
-          onConfirm={() => setDeleteError(null)}
-          variant="danger"
-          showCancelButton={false}
-        />
-      )}
 
       {/* Enrichment Modal - Only for master resume */}
       {isMasterResume && (
