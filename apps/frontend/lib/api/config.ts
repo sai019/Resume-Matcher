@@ -165,11 +165,13 @@ export const PROVIDER_INFO: Record<
 export interface FeatureConfig {
   enable_cover_letter: boolean;
   enable_outreach_message: boolean;
+  enable_interview_prep: boolean;
 }
 
 export interface FeatureConfigUpdate {
   enable_cover_letter?: boolean;
   enable_outreach_message?: boolean;
+  enable_interview_prep?: boolean;
 }
 
 // Fetch feature configuration

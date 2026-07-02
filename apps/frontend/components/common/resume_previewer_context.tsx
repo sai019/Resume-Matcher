@@ -81,6 +81,26 @@ export interface ResumePreview {
   additional: AdditionalInfo;
 }
 
+export interface InterviewPrepQuestion {
+  question: string;
+  focus_area?: string | null;
+  suggested_answer_points: string[];
+}
+
+export interface InterviewPrepSkillGap {
+  skill: string;
+  why_it_matters: string;
+  preparation_suggestion: string;
+}
+
+export interface InterviewPrepData {
+  role_fit_analysis: string[];
+  resume_questions: InterviewPrepQuestion[];
+  project_follow_ups: InterviewPrepQuestion[];
+  skill_gaps: InterviewPrepSkillGap[];
+  talking_points: string[];
+}
+
 export interface Data {
   request_id: string;
   resume_id: string | null;
@@ -98,6 +118,7 @@ export interface Data {
   job_keywords?: string;
   cover_letter?: string;
   outreach_message?: string;
+  interview_prep?: InterviewPrepData | null;
   diff_summary?: ResumeDiffSummary;
   detailed_changes?: ResumeFieldDiff[];
 }

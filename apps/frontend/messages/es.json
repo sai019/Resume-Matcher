@@ -176,7 +176,8 @@
       "resume": "CURRÍCULUM",
       "coverLetter": "CARTA",
       "outreach": "MENSAJE",
-      "jdMatch": "COINCIDENCIA JD"
+      "jdMatch": "COINCIDENCIA JD",
+      "interviewPrep": "PREPARACION"
     },
     "footer": {
       "moduleLabel": "Módulo del constructor",
@@ -195,7 +196,9 @@
       "outreachDescription": "Genera un mensaje de contacto breve para LinkedIn o email según tu currículum y la descripción del puesto.",
       "generateButton": "Generar {title}",
       "coverLetterFooter": "Consejo: adapta primero para mejores resultados.",
-      "outreachFooter": "Consejo: manténlo breve y personalizado."
+      "outreachFooter": "Consejo: manténlo breve y personalizado.",
+      "interviewPrepDescription": "Genera preparacion para entrevistas segun tu curriculum adaptado y la descripcion del puesto.",
+      "interviewPrepFooter": "Consejo: usalo despues de adaptar el curriculum para preparar respuestas veraces basadas en evidencia."
     },
     "regenerateDialog": {
       "title": "¿Regenerar {title}?",
@@ -444,7 +447,8 @@
       "editorPanel": "Panel de edición",
       "coverLetterEditor": "Editor de carta",
       "outreachEditor": "Editor de mensaje",
-      "jdMatchAnalysis": "Análisis de coincidencia JD"
+      "jdMatchAnalysis": "Análisis de coincidencia JD",
+      "interviewPrep": "Preparacion de entrevista"
     },
     "alerts": {
       "saveNotAvailable": "Guardar solo está disponible al editar un currículum existente.",
@@ -461,7 +465,8 @@
       "coverLetterDownloadFailed": "No se pudo descargar la carta de presentación: {error}",
       "outreachSaveFailed": "No se pudo guardar el mensaje de contacto. Por favor, inténtalo de nuevo.",
       "coverLetterGenerateFailed": "No se pudo generar la carta de presentación: {error}",
-      "outreachGenerateFailed": "No se pudo generar el mensaje de contacto: {error}"
+      "outreachGenerateFailed": "No se pudo generar el mensaje de contacto: {error}",
+      "interviewPrepGenerateFailed": "No se pudo generar la preparacion de entrevista: {error}"
     }
   },
   "enrichment": {
@@ -705,7 +710,11 @@
       "customPromptLabel": "Prompt personalizado (opcional)",
       "customPromptHelp": "Debe incluir estos marcadores (cada uno entre llaves): job_description, resume_data, output_language. Déjalo en blanco para usar el prompt por defecto.",
       "customPromptResetButton": "Restablecer al predeterminado",
-      "customPromptErrorMissing": "Faltan marcadores requeridos: {missing}"
+      "customPromptErrorMissing": "Faltan marcadores requeridos: {missing}",
+      "interviewPrep": {
+        "label": "Preparacion de entrevista",
+        "description": "Genera automaticamente preparacion de entrevista junto con los curriculums adaptados guardados"
+      }
     },
     "promptSettings": {
       "title": "Configuración de Prompts",
@@ -1005,6 +1014,25 @@
       "loadFailed": "No se pudieron cargar las candidaturas.",
       "moveFailed": "No se pudo mover la candidatura.",
       "deleteFailed": "No se pudieron eliminar las candidaturas."
+    }
+  },
+  "interviewPrep": {
+    "title": "Preparacion de entrevista",
+    "regenerate": "Regenerar",
+    "unavailableTitle": "Preparacion no disponible",
+    "loadingContextDescription": "Comprobando el contexto del puesto para este curriculum adaptado antes de generar.",
+    "missingContextDescription": "Este curriculum adaptado no tiene el contexto del puesto guardado que se necesita para generar preparacion de entrevista. Vuelve a adaptar el curriculum con una descripcion del puesto.",
+    "saveRequiredDescription": "Guarda este curriculum adaptado antes de generar preparacion de entrevista.",
+    "focusArea": "Area de enfoque",
+    "suggestedAnswerPoints": "Puntos sugeridos para responder",
+    "whyItMatters": "Por que importa",
+    "preparationSuggestion": "Sugerencia de preparacion",
+    "sections": {
+      "roleFit": "Analisis de encaje",
+      "resumeQuestions": "Preguntas basadas en el curriculum",
+      "projectFollowUps": "Seguimiento de proyectos",
+      "skillGaps": "Brechas de habilidades",
+      "talkingPoints": "Puntos clave"
     }
   }
 }

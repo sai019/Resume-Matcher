@@ -176,7 +176,8 @@
       "resume": "履歴書",
       "coverLetter": "カバーレター",
       "outreach": "連絡メール",
-      "jdMatch": "JD一致"
+      "jdMatch": "JD一致",
+      "interviewPrep": "面接準備"
     },
     "footer": {
       "moduleLabel": "履歴書ビルダーモジュール",
@@ -195,7 +196,9 @@
       "outreachDescription": "履歴書と求人内容に基づいて、LinkedIn またはメール向けの外連絡メッセージを生成します。",
       "generateButton": "{title}を生成",
       "coverLetterFooter": "ヒント：先にカスタマイズすると精度が上がります。",
-      "outreachFooter": "ヒント：短く、個別性を入れましょう。"
+      "outreachFooter": "ヒント：短く、個別性を入れましょう。",
+      "interviewPrepDescription": "カスタマイズ済み履歴書と求人内容に基づいて、職種別の面接準備を生成します。",
+      "interviewPrepFooter": "ヒント：カスタマイズ後に、履歴書の根拠に基づく正確な回答を準備しましょう。"
     },
     "regenerateDialog": {
       "title": "{title}を再生成しますか？",
@@ -444,7 +447,8 @@
       "editorPanel": "編集パネル",
       "coverLetterEditor": "カバーレター編集",
       "outreachEditor": "連絡メール編集",
-      "jdMatchAnalysis": "JD一致分析"
+      "jdMatchAnalysis": "JD一致分析",
+      "interviewPrep": "面接準備"
     },
     "alerts": {
       "saveNotAvailable": "既存の履歴書を編集中のみ保存できます。",
@@ -461,7 +465,8 @@
       "coverLetterDownloadFailed": "カバーレターのダウンロードに失敗しました: {error}",
       "outreachSaveFailed": "連絡メールの保存に失敗しました。もう一度お試しください。",
       "coverLetterGenerateFailed": "カバーレターの生成に失敗しました: {error}",
-      "outreachGenerateFailed": "連絡メールの生成に失敗しました: {error}"
+      "outreachGenerateFailed": "連絡メールの生成に失敗しました: {error}",
+      "interviewPrepGenerateFailed": "面接準備の生成に失敗しました: {error}"
     }
   },
   "enrichment": {
@@ -705,7 +710,11 @@
       "customPromptLabel": "カスタムプロンプト（任意）",
       "customPromptHelp": "次のプレースホルダーを中括弧で囲んで含めてください：job_description, resume_data, output_language。空欄の場合は既定のプロンプトを使用します。",
       "customPromptResetButton": "デフォルトにリセット",
-      "customPromptErrorMissing": "必須のプレースホルダーが不足しています：{missing}"
+      "customPromptErrorMissing": "必須のプレースホルダーが不足しています：{missing}",
+      "interviewPrep": {
+        "label": "面接準備",
+        "description": "保存済みのカスタマイズ履歴書と一緒に面接準備を自動生成します"
+      }
     },
     "promptSettings": {
       "title": "プロンプト設定",
@@ -1005,6 +1014,25 @@
       "loadFailed": "応募を読み込めませんでした。",
       "moveFailed": "応募を移動できませんでした。",
       "deleteFailed": "応募を削除できませんでした。"
+    }
+  },
+  "interviewPrep": {
+    "title": "面接準備",
+    "regenerate": "再生成",
+    "unavailableTitle": "面接準備は利用できません",
+    "loadingContextDescription": "生成前に、このカスタマイズ済み履歴書の求人コンテキストを確認しています。",
+    "missingContextDescription": "このカスタマイズ済み履歴書には、面接準備の生成に必要な保存済み求人コンテキストがありません。求人内容で履歴書を再度カスタマイズしてください。",
+    "saveRequiredDescription": "面接準備を生成する前に、このカスタマイズ済み履歴書を保存してください。",
+    "focusArea": "重点領域",
+    "suggestedAnswerPoints": "回答ポイント",
+    "whyItMatters": "重要な理由",
+    "preparationSuggestion": "準備の提案",
+    "sections": {
+      "roleFit": "職務適合分析",
+      "resumeQuestions": "履歴書ベースの質問",
+      "projectFollowUps": "プロジェクト深掘り質問",
+      "skillGaps": "スキルギャップ",
+      "talkingPoints": "話すべき要点"
     }
   }
 }

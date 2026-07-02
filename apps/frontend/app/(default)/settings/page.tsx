@@ -141,6 +141,7 @@ export default function SettingsPage() {
   // Feature config state
   const [enableCoverLetter, setEnableCoverLetter] = useState(false);
   const [enableOutreach, setEnableOutreach] = useState(false);
+  const [enableInterviewPrep, setEnableInterviewPrep] = useState(false);
   const [featureConfigLoading, setFeatureConfigLoading] = useState(false);
   const [promptConfigLoading, setPromptConfigLoading] = useState(false);
   const [promptOptions, setPromptOptions] = useState<PromptOption[]>([]);
@@ -315,6 +316,7 @@ export default function SettingsPage() {
         if (featureConfig) {
           setEnableCoverLetter(featureConfig.enable_cover_letter);
           setEnableOutreach(featureConfig.enable_outreach_message);
+          setEnableInterviewPrep(featureConfig.enable_interview_prep);
         }
 
         if (promptConfig) {
@@ -482,7 +484,7 @@ export default function SettingsPage() {
 
   // Update feature config
   const handleFeatureConfigChange = async (
-    key: 'enable_cover_letter' | 'enable_outreach_message',
+    key: 'enable_cover_letter' | 'enable_outreach_message' | 'enable_interview_prep',
     value: boolean
   ) => {
     setFeatureConfigLoading(true);
@@ -490,13 +492,16 @@ export default function SettingsPage() {
       const updated = await updateFeatureConfig({ [key]: value });
       setEnableCoverLetter(updated.enable_cover_letter);
       setEnableOutreach(updated.enable_outreach_message);
+      setEnableInterviewPrep(updated.enable_interview_prep);
     } catch (err) {
       console.error('Failed to update feature config', err);
       // Revert on error
       if (key === 'enable_cover_letter') {
         setEnableCoverLetter(!value);
-      } else {
+      } else if (key === 'enable_outreach_message') {
         setEnableOutreach(!value);
+      } else {
+        setEnableInterviewPrep(!value);
       }
     } finally {
       setFeatureConfigLoading(false);
@@ -1237,6 +1242,16 @@ export default function SettingsPage() {
                     </div>
                   </div>
                 )}
+                <ToggleSwitch
+                  checked={enableInterviewPrep}
+                  onCheckedChange={(checked) => {
+                    setEnableInterviewPrep(checked);
+                    handleFeatureConfigChange('enable_interview_prep', checked);
+                  }}
+                  label={t('settings.contentGeneration.interviewPrep.label')}
+                  description={t('settings.contentGeneration.interviewPrep.description')}
+                  disabled={featureConfigLoading}
+                />
               </div>
 
               <div className="pt-4 border-t border-paper-tint">

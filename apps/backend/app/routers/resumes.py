@@ -23,10 +23,12 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 from app.schemas import (
     GenerateContentResponse,
+    GenerateInterviewPrepResponse,
     ImproveResumeConfirmRequest,
     ImproveResumeRequest,
     ImproveResumeResponse,
     ImproveResumeData,
+    InterviewPrepData,
     RefinementStats,
     ResumeDiffSummary,
     ResumeFieldDiff,
@@ -61,6 +63,7 @@ from app.services.cover_letter import (
     generate_outreach_message,
     generate_resume_title,
 )
+from app.services.interview_prep import generate_interview_prep
 from app.prompts import DEFAULT_IMPROVE_PROMPT_ID, IMPROVE_PROMPT_OPTIONS
 
 
@@ -118,6 +121,31 @@ def _normalize_payload(value: Any) -> Any:
             normalized[normalized_key] = _normalize_payload(val)
         return normalized
     return value
+
+
+def _serialize_interview_prep(interview_prep: InterviewPrepData | None) -> str | None:
+    if interview_prep is None:
+        return None
+    return json.dumps(interview_prep.model_dump(mode="json"), ensure_ascii=False)
+
+
+def _parse_interview_prep(
+    raw: Any,
+    *,
+    resume_id: str | None = None,
+) -> InterviewPrepData | None:
+    if raw in (None, ""):
+        return None
+    try:
+        payload = json.loads(raw) if isinstance(raw, str) else raw
+        return InterviewPrepData.model_validate(payload)
+    except (TypeError, json.JSONDecodeError, ValidationError, ValueError) as e:
+        logger.warning(
+            "Invalid interview_prep payload for resume %s: %s",
+            resume_id or "<unknown>",
+            e,
+        )
+        return None
 
 
 def _hash_improved_data(data: dict[str, Any]) -> str:
@@ -491,16 +519,18 @@ async def _generate_auxiliary_messages(
     language: str,
     enable_cover_letter: bool,
     enable_outreach: bool,
-) -> tuple[str | None, str | None, str | None, list[str]]:
-    """Generate cover letter, outreach message, and resume title.
+    enable_interview_prep: bool,
+) -> tuple[str | None, str | None, str | None, InterviewPrepData | None, list[str]]:
+    """Generate cover letter, outreach, interview prep, and resume title.
 
-    Returns (cover_letter, outreach_message, title, warnings).
+    Returns (cover_letter, outreach_message, title, interview_prep, warnings).
     """
     cover_letter = None
     outreach_message = None
     title = None
+    interview_prep = None
     warnings: list[str] = []
-    generation_tasks: list[Awaitable[str]] = []
+    generation_tasks: list[Awaitable[Any]] = []
     task_labels: list[str] = []
 
     # Title generation is always on (no feature flag)
@@ -517,6 +547,11 @@ async def _generate_auxiliary_messages(
             generate_outreach_message(improved_data, job_content, language)
         )
         task_labels.append("outreach")
+    if enable_interview_prep:
+        generation_tasks.append(
+            generate_interview_prep(improved_data, job_content, language)
+        )
+        task_labels.append("interview_prep")
 
     results = await asyncio.gather(*generation_tasks, return_exceptions=True)
     for label, result in zip(task_labels, results):
@@ -536,8 +571,10 @@ async def _generate_auxiliary_messages(
                 cover_letter = result
             elif label == "outreach":
                 outreach_message = result
+            elif label == "interview_prep":
+                interview_prep = result
 
-    return cover_letter, outreach_message, title, warnings
+    return cover_letter, outreach_message, title, interview_prep, warnings
 
 
 router = APIRouter(prefix="/resumes", tags=["Resumes"])
@@ -680,6 +717,10 @@ async def get_resume(resume_id: str = Query(...)) -> ResumeFetchResponse:
             processed_resume=processed_resume,
             cover_letter=resume.get("cover_letter"),
             outreach_message=resume.get("outreach_message"),
+            interview_prep=_parse_interview_prep(
+                resume.get("interview_prep"),
+                resume_id=resume_id,
+            ),
             parent_id=resume.get("parent_id"),
             title=resume.get("title"),
         ),
@@ -1013,6 +1054,7 @@ async def _improve_preview_flow(
             markdownImproved=improved_text,
             cover_letter=None,
             outreach_message=None,
+            interview_prep=None,
             diff_summary=diff_summary,
             detailed_changes=detailed_changes,
             refinement_stats=refinement_stats,
@@ -1039,6 +1081,7 @@ async def improve_resume_confirm_endpoint(
     feature_config = _load_config()
     enable_cover_letter = feature_config.get("enable_cover_letter", False)
     enable_outreach = feature_config.get("enable_outreach_message", False)
+    enable_interview_prep = feature_config.get("enable_interview_prep", False)
     language = get_content_language()
 
     stage = "serialize_improved_data"
@@ -1101,6 +1144,7 @@ async def improve_resume_confirm_endpoint(
             cover_letter,
             outreach_message,
             title,
+            interview_prep,
             aux_warnings,
         ) = await _generate_auxiliary_messages(
             improved_data,
@@ -1108,6 +1152,7 @@ async def improve_resume_confirm_endpoint(
             language,
             enable_cover_letter,
             enable_outreach,
+            enable_interview_prep,
         )
         response_warnings.extend(aux_warnings)
 
@@ -1122,6 +1167,7 @@ async def improve_resume_confirm_endpoint(
             processing_status="ready",
             cover_letter=cover_letter,
             outreach_message=outreach_message,
+            interview_prep=_serialize_interview_prep(interview_prep),
             title=title,
         )
 
@@ -1155,6 +1201,7 @@ async def improve_resume_confirm_endpoint(
                 markdownImproved=improved_text,
                 cover_letter=cover_letter,
                 outreach_message=outreach_message,
+                interview_prep=interview_prep,
                 diff_summary=diff_summary,
                 detailed_changes=detailed_changes,
                 warnings=response_warnings,
@@ -1191,6 +1238,7 @@ async def improve_resume_endpoint(
     feature_config = _load_config()
     enable_cover_letter = feature_config.get("enable_cover_letter", False)
     enable_outreach = feature_config.get("enable_outreach_message", False)
+    enable_interview_prep = feature_config.get("enable_interview_prep", False)
     language = get_content_language()
 
     try:
@@ -1339,6 +1387,7 @@ async def improve_resume_endpoint(
             cover_letter,
             outreach_message,
             title,
+            interview_prep,
             aux_warnings,
         ) = await _generate_auxiliary_messages(
             improved_data,
@@ -1346,6 +1395,7 @@ async def improve_resume_endpoint(
             language,
             enable_cover_letter,
             enable_outreach,
+            enable_interview_prep,
         )
         response_warnings.extend(aux_warnings)
 
@@ -1360,6 +1410,7 @@ async def improve_resume_endpoint(
             processing_status="ready",
             cover_letter=cover_letter,
             outreach_message=outreach_message,
+            interview_prep=_serialize_interview_prep(interview_prep),
             title=title,
         )
 
@@ -1398,6 +1449,7 @@ async def improve_resume_endpoint(
                 markdownImproved=improved_text,
                 cover_letter=cover_letter,
                 outreach_message=outreach_message,
+                interview_prep=interview_prep,
                 # Diff metadata
                 diff_summary=diff_summary,
                 detailed_changes=detailed_changes,
@@ -1461,6 +1513,14 @@ async def update_resume_endpoint(
             resume_id=resume_id,
             raw_resume=raw_resume,
             processed_resume=processed_resume,
+            cover_letter=updated.get("cover_letter"),
+            outreach_message=updated.get("outreach_message"),
+            interview_prep=_parse_interview_prep(
+                updated.get("interview_prep"),
+                resume_id=resume_id,
+            ),
+            parent_id=updated.get("parent_id"),
+            title=updated.get("title"),
         ),
     )
 
@@ -1788,6 +1848,73 @@ async def generate_outreach_endpoint(resume_id: str) -> GenerateContentResponse:
     return GenerateContentResponse(
         content=outreach_content,
         message="Outreach message generated successfully",
+    )
+
+
+@router.post(
+    "/{resume_id}/generate-interview-prep",
+    response_model=GenerateInterviewPrepResponse,
+)
+async def generate_interview_prep_endpoint(
+    resume_id: str,
+) -> GenerateInterviewPrepResponse:
+    """Generate interview preparation on-demand for an existing tailored resume."""
+    resume = await db.get_resume(resume_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+
+    if not resume.get("parent_id"):
+        raise HTTPException(
+            status_code=400,
+            detail="Interview preparation can only be generated for tailored resumes. "
+            "Please tailor this resume to a job description first.",
+        )
+
+    improvement = await db.get_improvement_by_tailored_resume(resume_id)
+    if not improvement:
+        raise HTTPException(
+            status_code=400,
+            detail="No job context found for this resume. "
+            "The resume may have been created before job tracking was implemented.",
+        )
+
+    job = await db.get_job(improvement["job_id"])
+    if not job:
+        raise HTTPException(
+            status_code=404,
+            detail="The associated job description was not found.",
+        )
+
+    resume_data = resume.get("processed_data")
+    if not resume_data:
+        raise HTTPException(
+            status_code=400,
+            detail="Resume has no processed data. Please re-upload the resume.",
+        )
+
+    language = get_content_language()
+
+    try:
+        interview_prep = await generate_interview_prep(
+            resume_data,
+            job["content"],
+            language,
+        )
+    except Exception as e:
+        logger.error("Interview preparation generation failed: %s", e)
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to generate interview preparation. Please try again.",
+        )
+
+    await db.update_resume(
+        resume_id,
+        {"interview_prep": _serialize_interview_prep(interview_prep)},
+    )
+
+    return GenerateInterviewPrepResponse(
+        interview_prep=interview_prep,
+        message="Interview preparation generated successfully",
     )
 
 

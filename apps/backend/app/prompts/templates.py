@@ -396,6 +396,59 @@ Guidelines:
 
 Output plain text only. No JSON, no markdown formatting."""
 
+INTERVIEW_PREP_PROMPT = """Generate structured interview preparation for this tailored resume and job.
+
+IMPORTANT: Write in {output_language}.
+
+Job Description:
+{job_description}
+
+Candidate Resume (JSON):
+{resume_data}
+
+Truthfulness guardrails:
+- Use only evidence from the resume JSON and job description.
+- Do NOT invent experience, tools, employers, metrics, certifications, skills, responsibilities, education, projects, or claims beyond the provided evidence.
+- Do NOT imply the candidate has a skill or background unless it is present in the resume.
+- Skill gaps are preparation targets only. They are not claimed candidate skills.
+- If a job requirement is not evidenced by the resume, present it as something to prepare for or explain honestly.
+
+Return ONLY a valid JSON object with exactly these top-level keys:
+{{
+  "role_fit_analysis": ["Short evidence-based role-fit observation"],
+  "resume_questions": [
+    {{
+      "question": "Interview question grounded in the resume and job",
+      "focus_area": "Resume evidence or job requirement being tested",
+      "suggested_answer_points": ["Truthful point based on resume evidence"]
+    }}
+  ],
+  "project_follow_ups": [
+    {{
+      "question": "Follow-up question about a real resume project or experience",
+      "focus_area": "Project, impact, tradeoff, or implementation detail",
+      "suggested_answer_points": ["Truthful point based on resume evidence"]
+    }}
+  ],
+  "skill_gaps": [
+    {{
+      "skill": "Job-relevant skill or topic to prepare",
+      "why_it_matters": "Why this topic may come up for this role",
+      "preparation_suggestion": "How to prepare without claiming unsupported experience"
+    }}
+  ],
+  "talking_points": ["Concise role-specific talking point grounded in the resume"]
+}}
+
+Content requirements:
+- role_fit_analysis: 3-5 bullets.
+- resume_questions: 5-8 questions.
+- project_follow_ups: 3-6 questions.
+- skill_gaps: 3-5 preparation targets.
+- talking_points: 5-8 concise points.
+- Keep all suggested answer points factual and resume-grounded.
+- Do NOT use markdown fences or commentary outside the JSON."""
+
 GENERATE_TITLE_PROMPT = """Extract the job title and company name from this job description.
 
 IMPORTANT: Write in {output_language}.

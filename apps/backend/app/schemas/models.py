@@ -380,6 +380,32 @@ class RawResume(BaseModel):
     processing_status: str = "pending"  # pending, processing, ready, failed
 
 
+class InterviewPrepQuestion(BaseModel):
+    """Interview question grounded in the tailored resume and job context."""
+
+    question: str
+    focus_area: str | None = None
+    suggested_answer_points: list[str] = Field(default_factory=list)
+
+
+class InterviewPrepSkillGap(BaseModel):
+    """A preparation target, not a claimed candidate skill."""
+
+    skill: str
+    why_it_matters: str
+    preparation_suggestion: str
+
+
+class InterviewPrepData(BaseModel):
+    """Structured interview preparation content for a tailored resume."""
+
+    role_fit_analysis: list[str]
+    resume_questions: list[InterviewPrepQuestion]
+    project_follow_ups: list[InterviewPrepQuestion]
+    skill_gaps: list[InterviewPrepSkillGap]
+    talking_points: list[str]
+
+
 class ResumeFetchData(BaseModel):
     """Data payload for resume fetch response."""
 
@@ -388,6 +414,7 @@ class ResumeFetchData(BaseModel):
     processed_resume: ResumeData | None = None
     cover_letter: str | None = None
     outreach_message: str | None = None
+    interview_prep: InterviewPrepData | None = None
     parent_id: str | None = None  # For determining if resume is tailored
     title: str | None = None
 
@@ -522,6 +549,7 @@ class ImproveResumeData(BaseModel):
     markdownImproved: str | None = None
     cover_letter: str | None = None
     outreach_message: str | None = None
+    interview_prep: InterviewPrepData | None = None
 
     # Diff metadata
     diff_summary: ResumeDiffSummary | None = None
@@ -588,6 +616,7 @@ class FeatureConfigRequest(BaseModel):
 
     enable_cover_letter: bool | None = None
     enable_outreach_message: bool | None = None
+    enable_interview_prep: bool | None = None
 
 
 class FeatureConfigResponse(BaseModel):
@@ -595,6 +624,7 @@ class FeatureConfigResponse(BaseModel):
 
     enable_cover_letter: bool = False
     enable_outreach_message: bool = False
+    enable_interview_prep: bool = False
 
 
 class LanguageConfigRequest(BaseModel):
@@ -724,6 +754,13 @@ class GenerateContentResponse(BaseModel):
     """Response for on-demand content generation."""
 
     content: str
+    message: str
+
+
+class GenerateInterviewPrepResponse(BaseModel):
+    """Response for on-demand interview preparation generation."""
+
+    interview_prep: InterviewPrepData
     message: str
 
 

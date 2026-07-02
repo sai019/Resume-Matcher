@@ -176,7 +176,8 @@
       "resume": "RESUME",
       "coverLetter": "COVER LETTER",
       "outreach": "OUTREACH MAIL",
-      "jdMatch": "JD MATCH"
+      "jdMatch": "JD MATCH",
+      "interviewPrep": "INTERVIEW PREP"
     },
     "footer": {
       "moduleLabel": "Resume Builder Module",
@@ -195,7 +196,9 @@
       "outreachDescription": "Generate a concise outreach message for LinkedIn or email based on your resume and job description.",
       "generateButton": "Generate {title}",
       "coverLetterFooter": "Tip: tailor first for best results.",
-      "outreachFooter": "Tip: keep it short and personalized."
+      "outreachFooter": "Tip: keep it short and personalized.",
+      "interviewPrepDescription": "Generate role-specific interview preparation based on your tailored resume and job description.",
+      "interviewPrepFooter": "Tip: use this after tailoring to prepare truthful, resume-grounded answers."
     },
     "regenerateDialog": {
       "title": "Regenerate {title}?",
@@ -444,7 +447,8 @@
       "editorPanel": "Editor Panel",
       "coverLetterEditor": "Cover Letter Editor",
       "outreachEditor": "Outreach Message Editor",
-      "jdMatchAnalysis": "JD Match Analysis"
+      "jdMatchAnalysis": "JD Match Analysis",
+      "interviewPrep": "Interview Prep"
     },
     "alerts": {
       "saveNotAvailable": "Save is only available when editing an existing resume.",
@@ -461,7 +465,8 @@
       "coverLetterDownloadFailed": "Failed to download cover letter: {error}",
       "outreachSaveFailed": "Failed to save outreach message. Please try again.",
       "coverLetterGenerateFailed": "Failed to generate cover letter: {error}",
-      "outreachGenerateFailed": "Failed to generate outreach message: {error}"
+      "outreachGenerateFailed": "Failed to generate outreach message: {error}",
+      "interviewPrepGenerateFailed": "Failed to generate interview preparation: {error}"
     }
   },
   "enrichment": {
@@ -705,7 +710,11 @@
       "customPromptLabel": "Custom prompt (optional)",
       "customPromptHelp": "Must include these placeholders (each in curly braces): job_description, resume_data, output_language. Leave blank to use the default prompt.",
       "customPromptResetButton": "Reset to default",
-      "customPromptErrorMissing": "Missing required placeholders: {missing}"
+      "customPromptErrorMissing": "Missing required placeholders: {missing}",
+      "interviewPrep": {
+        "label": "Interview Preparation",
+        "description": "Automatically generate interview preparation alongside saved tailored resumes"
+      }
     },
     "promptSettings": {
       "title": "Prompt Settings",
@@ -1005,6 +1014,25 @@
       "loadFailed": "Could not load applications.",
       "moveFailed": "Could not move the application.",
       "deleteFailed": "Could not delete the application(s)."
+    }
+  },
+  "interviewPrep": {
+    "title": "Interview Prep",
+    "regenerate": "Regenerate",
+    "unavailableTitle": "Interview Prep Not Available",
+    "loadingContextDescription": "Checking the job context for this tailored resume before generation.",
+    "missingContextDescription": "This tailored resume does not have the saved job context required to generate interview preparation. Re-tailor the resume with a job description to use this workflow.",
+    "saveRequiredDescription": "Save this tailored resume before generating interview preparation.",
+    "focusArea": "Focus area",
+    "suggestedAnswerPoints": "Suggested answer points",
+    "whyItMatters": "Why it matters",
+    "preparationSuggestion": "Preparation suggestion",
+    "sections": {
+      "roleFit": "Role-Fit Analysis",
+      "resumeQuestions": "Resume-Based Questions",
+      "projectFollowUps": "Project Follow-Ups",
+      "skillGaps": "Skill Gaps",
+      "talkingPoints": "Talking Points"
     }
   }
 }

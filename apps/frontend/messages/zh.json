@@ -176,7 +176,8 @@
       "resume": "简历",
       "coverLetter": "求职信",
       "outreach": "联系邮件",
-      "jdMatch": "JD 匹配"
+      "jdMatch": "JD 匹配",
+      "interviewPrep": "面试准备"
     },
     "footer": {
       "moduleLabel": "简历编辑模块",
@@ -195,7 +196,9 @@
       "outreachDescription": "基于你的简历与职位描述生成用于 LinkedIn 或邮件的外联消息。",
       "generateButton": "生成 {title}",
       "coverLetterFooter": "提示：先完成简历定制效果更佳。",
-      "outreachFooter": "提示：尽量简短并加入个性化细节。"
+      "outreachFooter": "提示：尽量简短并加入个性化细节。",
+      "interviewPrepDescription": "基于已定制简历和职位描述生成针对性的面试准备内容。",
+      "interviewPrepFooter": "提示：定制简历后使用，准备真实且基于简历证据的回答。"
     },
     "regenerateDialog": {
       "title": "重新生成 {title}？",
@@ -444,7 +447,8 @@
       "editorPanel": "编辑面板",
       "coverLetterEditor": "求职信编辑",
       "outreachEditor": "联系邮件编辑",
-      "jdMatchAnalysis": "JD 匹配分析"
+      "jdMatchAnalysis": "JD 匹配分析",
+      "interviewPrep": "面试准备"
     },
     "alerts": {
       "saveNotAvailable": "仅在编辑现有简历时可保存。",
@@ -461,7 +465,8 @@
       "coverLetterDownloadFailed": "下载求职信失败：{error}",
       "outreachSaveFailed": "保存联系邮件失败，请重试。",
       "coverLetterGenerateFailed": "生成求职信失败：{error}",
-      "outreachGenerateFailed": "生成联系邮件失败：{error}"
+      "outreachGenerateFailed": "生成联系邮件失败：{error}",
+      "interviewPrepGenerateFailed": "生成面试准备失败：{error}"
     }
   },
   "enrichment": {
@@ -705,7 +710,11 @@
       "customPromptLabel": "自定义提示词（可选）",
       "customPromptHelp": "必须包含以下占位符（各自使用大括号括起来）：job_description、resume_data、output_language。留空则使用默认提示词。",
       "customPromptResetButton": "恢复默认",
-      "customPromptErrorMissing": "缺少必需的占位符：{missing}"
+      "customPromptErrorMissing": "缺少必需的占位符：{missing}",
+      "interviewPrep": {
+        "label": "面试准备",
+        "description": "保存定制简历时自动生成面试准备内容"
+      }
     },
     "promptSettings": {
       "title": "提示词设置",
@@ -1005,6 +1014,25 @@
       "loadFailed": "无法加载申请。",
       "moveFailed": "无法移动该申请。",
       "deleteFailed": "无法删除该申请。"
+    }
+  },
+  "interviewPrep": {
+    "title": "面试准备",
+    "regenerate": "重新生成",
+    "unavailableTitle": "面试准备不可用",
+    "loadingContextDescription": "正在检查这份定制简历的职位上下文，然后才能生成面试准备。",
+    "missingContextDescription": "这份定制简历缺少生成面试准备所需的已保存职位上下文。请使用职位描述重新定制简历后再使用此流程。",
+    "saveRequiredDescription": "请先保存这份定制简历，然后再生成面试准备。",
+    "focusArea": "关注点",
+    "suggestedAnswerPoints": "建议回答要点",
+    "whyItMatters": "为什么重要",
+    "preparationSuggestion": "准备建议",
+    "sections": {
+      "roleFit": "岗位匹配分析",
+      "resumeQuestions": "基于简历的问题",
+      "projectFollowUps": "项目追问",
+      "skillGaps": "技能差距",
+      "talkingPoints": "沟通要点"
     }
   }
 }

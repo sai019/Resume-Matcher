@@ -11,6 +11,7 @@ import { OutreachEditor } from './outreach-editor';
 import { CoverLetterPreview } from './cover-letter-preview';
 import { OutreachPreview } from './outreach-preview';
 import { GeneratePrompt } from './generate-prompt';
+import { InterviewPrepView } from './interview-prep-view';
 import { Button } from '@/components/ui/button';
 import { RetroTabs } from '@/components/ui/retro-tabs';
 import { ConfirmDialog, type ConfirmDialogProps } from '@/components/ui/confirm-dialog';
@@ -25,7 +26,10 @@ import {
   Sparkles,
   Loader2,
 } from 'lucide-react';
-import { useResumePreview } from '@/components/common/resume_previewer_context';
+import {
+  useResumePreview,
+  type InterviewPrepData,
+} from '@/components/common/resume_previewer_context';
 import { PaginatedPreview } from '@/components/preview';
 import {
   downloadResumePdf,
@@ -38,6 +42,7 @@ import {
   updateOutreachMessage,
   generateCoverLetter,
   generateOutreachMessage,
+  generateInterviewPrep,
   fetchJobDescription,
 } from '@/lib/api/resume';
 import { JDComparisonView } from './jd-comparison-view';
@@ -50,12 +55,19 @@ import { useLanguage } from '@/lib/context/language-context';
 import { buildResumeFilename, downloadBlobAsFile, openUrlInNewTab } from '@/lib/utils/download';
 import type { RegenerateItemInput } from '@/lib/api/enrichment';
 
-type TabId = 'resume' | 'cover-letter' | 'outreach' | 'jd-match';
+type TabId = 'resume' | 'cover-letter' | 'outreach' | 'interview-prep' | 'jd-match';
+type JobContextStatus = 'idle' | 'loading' | 'available' | 'missing';
 
 const STORAGE_KEY = 'resume_builder_draft';
 const SETTINGS_STORAGE_KEY = 'resume_builder_settings';
+const TAB_IDS: TabId[] = ['resume', 'cover-letter', 'outreach', 'interview-prep', 'jd-match'];
 
 type Translate = (key: string, params?: Record<string, string | number>) => string;
+
+const getTabFromSearchParams = (searchParams: Pick<URLSearchParams, 'get'>): TabId => {
+  const tab = searchParams.get('tab');
+  return TAB_IDS.includes(tab as TabId) ? (tab as TabId) : 'resume';
+};
 
 const buildInitialData = (t: Translate): ResumeData => ({
   personalInfo: {
@@ -118,6 +130,7 @@ const ResumeBuilderContent = () => {
   const improvedPreview = improvedData?.data?.resume_preview;
   const improvedCoverLetter = improvedData?.data?.cover_letter;
   const improvedOutreach = improvedData?.data?.outreach_message;
+  const improvedInterviewPrep = improvedData?.data?.interview_prep ?? null;
   const searchParams = useSearchParams();
   const router = useRouter();
   const resumeId = searchParams.get('id');
@@ -135,11 +148,16 @@ const ResumeBuilderContent = () => {
   }, [initialData, resumeId, hasUnsavedChanges, improvedPreview]);
 
   // Tab state
-  const [activeTab, setActiveTab] = useState<TabId>('resume');
+  const [activeTab, setActiveTab] = useState<TabId>(() => getTabFromSearchParams(searchParams));
+
+  useEffect(() => {
+    setActiveTab(getTabFromSearchParams(searchParams));
+  }, [searchParams]);
 
   // Cover letter & outreach state
   const [coverLetter, setCoverLetter] = useState('');
   const [outreachMessage, setOutreachMessage] = useState('');
+  const [interviewPrep, setInterviewPrep] = useState<InterviewPrepData | null>(null);
   const [isCoverLetterSaving, setIsCoverLetterSaving] = useState(false);
   const [isOutreachSaving, setIsOutreachSaving] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -149,12 +167,15 @@ const ResumeBuilderContent = () => {
   const [isTailoredResume, setIsTailoredResume] = useState(false);
   const [isGeneratingCoverLetter, setIsGeneratingCoverLetter] = useState(false);
   const [isGeneratingOutreach, setIsGeneratingOutreach] = useState(false);
+  const [isGeneratingInterviewPrep, setIsGeneratingInterviewPrep] = useState(false);
+  const [interviewPrepError, setInterviewPrepError] = useState<string | null>(null);
   const [showRegenerateDialog, setShowRegenerateDialog] = useState<
-    'cover-letter' | 'outreach' | null
+    'cover-letter' | 'outreach' | 'interview-prep' | null
   >(null);
 
   // JD comparison state
   const [jobDescription, setJobDescription] = useState<string | null>(null);
+  const [jobContextStatus, setJobContextStatus] = useState<JobContextStatus>('idle');
 
   // AI Regenerate wizard
   const regenerateWizard = useRegenerateWizard({
@@ -297,6 +318,8 @@ const ResumeBuilderContent = () => {
           if (data.outreach_message) {
             setOutreachMessage(data.outreach_message);
           }
+          setInterviewPrep(data.interview_prep ?? null);
+          setInterviewPrepError(null);
           // Prefer processed_resume if available
           if (data.processed_resume) {
             setResumeData(data.processed_resume as ResumeData);
@@ -323,6 +346,7 @@ const ResumeBuilderContent = () => {
 
       // Priority 2: Improved Data from Context (Tailor Flow)
       if (improvedPreview) {
+        setIsTailoredResume(Boolean(improvedData?.data?.resume_id && improvedData.data.job_id));
         setResumeData(improvedPreview);
         setLastSavedData(improvedPreview);
         // Also load cover letter and outreach if present
@@ -332,6 +356,8 @@ const ResumeBuilderContent = () => {
         if (improvedOutreach) {
           setOutreachMessage(improvedOutreach);
         }
+        setInterviewPrep(improvedInterviewPrep);
+        setInterviewPrepError(null);
         // Persist to localStorage as backup
         localStorage.setItem(STORAGE_KEY, JSON.stringify(improvedPreview));
         setLoadingState('loaded');
@@ -358,7 +384,15 @@ const ResumeBuilderContent = () => {
     };
 
     loadResumeData();
-  }, [improvedPreview, improvedCoverLetter, improvedOutreach, resumeId]);
+  }, [
+    improvedData?.data?.job_id,
+    improvedData?.data?.resume_id,
+    improvedPreview,
+    improvedCoverLetter,
+    improvedOutreach,
+    improvedInterviewPrep,
+    resumeId,
+  ]);
 
   // Fetch job description when we have a tailored resume
   useEffect(() => {
@@ -366,21 +400,26 @@ const ResumeBuilderContent = () => {
 
     const loadJobDescription = async () => {
       if (isTailoredResume && resumeId) {
+        setJobDescription(null);
+        setJobContextStatus('loading');
         try {
           const data = await fetchJobDescription(resumeId);
           if (!cancelled) {
             setJobDescription(data.content);
+            setJobContextStatus('available');
           }
         } catch (err) {
           // JD might not be available for older resumes
           if (!cancelled) {
             console.warn('Could not fetch job description:', err);
             setJobDescription(null);
+            setJobContextStatus('missing');
           }
         }
       } else {
         // Clear job description when switching to non-tailored resume
         setJobDescription(null);
+        setJobContextStatus('idle');
       }
     };
 
@@ -602,6 +641,73 @@ const ResumeBuilderContent = () => {
     doGenerateOutreach();
   };
 
+  const canGenerateInterviewPrep =
+    Boolean(resumeId) && isTailoredResume && jobContextStatus === 'available';
+
+  const interviewPrepUnavailableMessage = !resumeId
+    ? t('interviewPrep.saveRequiredDescription')
+    : jobContextStatus === 'loading'
+      ? t('interviewPrep.loadingContextDescription')
+      : jobContextStatus === 'missing'
+        ? t('interviewPrep.missingContextDescription')
+        : null;
+
+  const doGenerateInterviewPrep = async () => {
+    if (!canGenerateInterviewPrep || !resumeId) return;
+    setIsGeneratingInterviewPrep(true);
+    setInterviewPrepError(null);
+    setShowRegenerateDialog(null);
+    try {
+      const content = await generateInterviewPrep(resumeId);
+      setInterviewPrep(content);
+    } catch (error) {
+      console.error('Failed to generate interview preparation:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setInterviewPrepError(
+        t('builder.alerts.interviewPrepGenerateFailed', { error: errorMessage })
+      );
+      showNotification(
+        t('builder.alerts.interviewPrepGenerateFailed', { error: errorMessage }),
+        'danger'
+      );
+    } finally {
+      setIsGeneratingInterviewPrep(false);
+    }
+  };
+
+  const handleGenerateInterviewPrep = () => {
+    if (!canGenerateInterviewPrep) return;
+    if (interviewPrep) {
+      setShowRegenerateDialog('interview-prep');
+      return;
+    }
+    doGenerateInterviewPrep();
+  };
+
+  const regenerateDialogContentTitle =
+    showRegenerateDialog === 'cover-letter'
+      ? t('coverLetter.title')
+      : showRegenerateDialog === 'outreach'
+        ? t('outreach.title')
+        : t('interviewPrep.title');
+
+  const regenerateDialogConfirmLabel =
+    showRegenerateDialog === 'cover-letter'
+      ? t('coverLetter.regenerate')
+      : showRegenerateDialog === 'outreach'
+        ? t('outreach.regenerate')
+        : t('interviewPrep.regenerate');
+
+  const handleConfirmRegenerate = () => {
+    if (showRegenerateDialog === 'cover-letter') {
+      doGenerateCoverLetter();
+    } else if (showRegenerateDialog === 'outreach') {
+      doGenerateOutreach();
+    } else if (showRegenerateDialog === 'interview-prep') {
+      doGenerateInterviewPrep();
+    }
+  };
+
   return (
     <div className="h-screen w-full bg-background flex justify-center items-center p-4 md:p-8">
       {/* Main Container */}
@@ -733,6 +839,23 @@ const ResumeBuilderContent = () => {
                   </Button>
                 </>
               )}
+
+              {/* Interview prep tab actions */}
+              {activeTab === 'interview-prep' && interviewPrep && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleGenerateInterviewPrep}
+                  disabled={!canGenerateInterviewPrep || isGeneratingInterviewPrep}
+                >
+                  {isGeneratingInterviewPrep ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-4 h-4" />
+                  )}
+                  {t('interviewPrep.regenerate')}
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -748,6 +871,7 @@ const ResumeBuilderContent = () => {
                   {activeTab === 'resume' && t('builder.leftPanel.editorPanel')}
                   {activeTab === 'cover-letter' && t('builder.leftPanel.coverLetterEditor')}
                   {activeTab === 'outreach' && t('builder.leftPanel.outreachEditor')}
+                  {activeTab === 'interview-prep' && t('builder.leftPanel.interviewPrep')}
                   {activeTab === 'jd-match' && t('builder.leftPanel.jdMatchAnalysis')}
                 </h2>
               </div>
@@ -795,6 +919,20 @@ const ResumeBuilderContent = () => {
                     isTailoredResume={isTailoredResume}
                   />
                 ))}
+
+              {/* Interview Prep Read-Only View */}
+              {activeTab === 'interview-prep' && (
+                <InterviewPrepView
+                  interviewPrep={interviewPrep}
+                  isGenerating={isGeneratingInterviewPrep}
+                  error={interviewPrepError}
+                  onGenerate={handleGenerateInterviewPrep}
+                  isTailoredResume={isTailoredResume}
+                  canGenerate={canGenerateInterviewPrep}
+                  unavailableMessage={interviewPrepUnavailableMessage}
+                  className="p-0"
+                />
+              )}
 
               {/* JD Match Info Panel */}
               {activeTab === 'jd-match' && (
@@ -865,6 +1003,11 @@ const ResumeBuilderContent = () => {
                     disabled: !outreachMessage,
                   },
                   {
+                    id: 'interview-prep',
+                    label: t('builder.previewTabs.interviewPrep'),
+                    disabled: !isTailoredResume,
+                  },
+                  {
                     id: 'jd-match',
                     label: t('builder.previewTabs.jdMatch'),
                     disabled: !jobDescription,
@@ -919,6 +1062,19 @@ const ResumeBuilderContent = () => {
                   />
                 ))}
 
+              {/* Interview Prep Preview */}
+              {activeTab === 'interview-prep' && (
+                <InterviewPrepView
+                  interviewPrep={interviewPrep}
+                  isGenerating={isGeneratingInterviewPrep}
+                  error={interviewPrepError}
+                  onGenerate={handleGenerateInterviewPrep}
+                  isTailoredResume={isTailoredResume}
+                  canGenerate={canGenerateInterviewPrep}
+                  unavailableMessage={interviewPrepUnavailableMessage}
+                />
+              )}
+
               {/* JD Match Comparison */}
               {activeTab === 'jd-match' && jobDescription && (
                 <JDComparisonView jobDescription={jobDescription} resumeData={resumeData} />
@@ -964,23 +1120,15 @@ const ResumeBuilderContent = () => {
         open={showRegenerateDialog !== null}
         onOpenChange={(open) => !open && setShowRegenerateDialog(null)}
         title={t('builder.regenerateDialog.title', {
-          title:
-            showRegenerateDialog === 'cover-letter' ? t('coverLetter.title') : t('outreach.title'),
+          title: regenerateDialogContentTitle,
         })}
         description={t('builder.regenerateDialog.description', {
-          title:
-            showRegenerateDialog === 'cover-letter' ? t('coverLetter.title') : t('outreach.title'),
+          title: regenerateDialogContentTitle,
         })}
-        confirmLabel={
-          showRegenerateDialog === 'cover-letter'
-            ? t('coverLetter.regenerate')
-            : t('outreach.regenerate')
-        }
+        confirmLabel={regenerateDialogConfirmLabel}
         cancelLabel={t('common.cancel')}
         variant="warning"
-        onConfirm={
-          showRegenerateDialog === 'cover-letter' ? doGenerateCoverLetter : doGenerateOutreach
-        }
+        onConfirm={handleConfirmRegenerate}
       />
 
       {/* Notification Dialog (replaces native alert()) */}

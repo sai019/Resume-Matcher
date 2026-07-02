@@ -34,11 +34,22 @@ export const ResumeTwoColumn: React.FC<ResumeTwoColumnProps> = ({
 
   // Drop blank/whitespace-only entries so empty lines (e.g. from editing in the
   // builder) never render in the resume or PDF (issue #763).
-  const technicalSkills = additional?.technicalSkills?.filter((item): item is string => typeof item === 'string' && item.trim() !== '') ?? [];
-  const languages = additional?.languages?.filter((item): item is string => typeof item === 'string' && item.trim() !== '') ?? [];
+  const technicalSkills =
+    additional?.technicalSkills?.filter(
+      (item): item is string => typeof item === 'string' && item.trim() !== ''
+    ) ?? [];
+  const languages =
+    additional?.languages?.filter(
+      (item): item is string => typeof item === 'string' && item.trim() !== ''
+    ) ?? [];
   const certificationsTraining =
-    additional?.certificationsTraining?.filter((item): item is string => typeof item === 'string' && item.trim() !== '') ?? [];
-  const awards = additional?.awards?.filter((item): item is string => typeof item === 'string' && item.trim() !== '') ?? [];
+    additional?.certificationsTraining?.filter(
+      (item): item is string => typeof item === 'string' && item.trim() !== ''
+    ) ?? [];
+  const awards =
+    additional?.awards?.filter(
+      (item): item is string => typeof item === 'string' && item.trim() !== ''
+    ) ?? [];
 
   // Get sorted visible sections
   const sortedSections = getSortedSections(data);
@@ -418,7 +429,9 @@ export const ResumeTwoColumn: React.FC<ResumeTwoColumnProps> = ({
           {/* Languages Section */}
           {isSectionVisible('additional') && languages.length > 0 && (
             <div className={baseStyles['resume-section']}>
-              <h3 className={baseStyles['resume-section-title-sm']}>{headingFallbacks.languages}</h3>
+              <h3 className={baseStyles['resume-section-title-sm']}>
+                {headingFallbacks.languages}
+              </h3>
               <p className={baseStyles['resume-text-xs']}>{languages.join(' • ')}</p>
             </div>
           )}
